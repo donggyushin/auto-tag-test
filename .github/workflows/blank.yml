@@ -1,24 +1,39 @@
-name: "pre-release"
+name: Auto Release Generator
 
 on:
   push:
     branches:
-      - "main"
+      - main
 
 jobs:
-  pre-release:
-    name: "Pre Release"
-    runs-on: "ubuntu-latest"
+  generate_release:
+    runs-on: ubuntu-latest
 
     steps:
-      # ...
-      - name: "Build & test"
-        run: |
-          echo "done!"
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
-          prerelease: true
-          title: "Development Build"
+      - name: Check commit message for release
+        run: |
+          COMMIT_MSG=$(git log --format=%B -n 1 ${{ github.sha }})
+          if [[ $COMMIT_MSG == release:* ]]; then
+            echo "Creating release..."
+            TAG_NAME=$(echo $COMMIT_MSG | cut -d' ' -f2)
+            echo "Tag name: $TAG_NAME"
+            # You can add additional steps here to generate release notes content
+            
+            # Create a new release using GitHub API
+            curl -X POST \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${{ github.repository }}/releases" \
+              -d '{
+                "tag_name": "'"$TAG_NAME"'",
+                "name": "'"$TAG_NAME"'",
+                "body": "{auto generated description when I tap Generate release notes button}"
+              }'
+          else
+            echo "No release commit detected."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
