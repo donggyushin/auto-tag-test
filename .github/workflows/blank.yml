@@ -1,39 +1,26 @@
-# This is a basic workflow to help you get started with Actions
+# This is a basic workflow to help you get started with the GitHub Auto-Release on Commit Action.
 
-name: Automatic Releases
-  uses: marvinpinto/action-automatic-releases@v1.2.1
-            
+name: AutoRelease
 
-
-name: pre-release
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main" ]
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+    branches: [ master ]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-    pre-release:
-      name: "Pre Release"
-      runs-on: "ubuntu-latest"
+  # This workflow contains a single job called "build"
+  release:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
 
-      steps:
-        # ...
-        - name: "Build & test"
-          run: |
-            echo "done!"
-
-        - uses: "marvinpinto/action-automatic-releases@latest"
-          with:
-            repo_token: "${{ secrets.GITHUB_TOKEN }}"
-            automatic_release_tag: "latest"
-            prerelease: true
-            title: "Development Build"
-            files: |
-              LICENSE.txt
-              *.jar
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - uses: actions/checkout@v2
+      - uses: CupOfTea696/gh-action-auto-release@v1.0.0
+        with:
+          title: "Release: $version"
+          tag: "v$semver"
+          draft: false
+          regex: "/^Release: #{semver}$/i"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
